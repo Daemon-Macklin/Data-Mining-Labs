@@ -140,7 +140,7 @@ def consolidateData(csvFrame, sqlFrame):
     
     """
     Visual Inspection
-    
+    MAKE A PLOT 
     From visual inspection we can see that the csvFrame has a column that is not present in the sql frame. the 
     The "Unnamed: 0" Column is only in the csvFrame. We don't need to do anything about this now. We can decide to keep
     the field by using an inner(discard) or an outter(keep) merge or concat.
