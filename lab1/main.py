@@ -31,7 +31,8 @@ def cleanseDateFields(dataFrame):
 def cleanseTypeFields(typeData):
     
     # Get all of the different types with the unique function ['conventional' 'organic' 'Org.']
-    # Clearly Org and organic are meant to be the same so there are 2 valid types
+    # Clearly Org and organic are meant to be the same so there are 2 valid types. To prevent this to happening again
+    # you could use ids corresponding to the type. This would reduce spelling erros and be cleaner.
     
     # Using this function you can find out the number of different types. Just change "Org." to conventional or organic to find the other values
     # Org. = 169 So there are 169 entires that have errors.
@@ -67,20 +68,14 @@ def importSQL():
     # Connect to the local database
     connection = pymysql.connect(host="localhost", user="dataMiner", password="dataMiner", db="BSCY4")
     
-    # Create a cursor
-    cursor = connection.cursor()
+    # Query to get all data from avocado
+    query = "SELECT * FROM AVOCADO"
     
-    # Execute the select all from the avocado table  command 
-    cursor.execute("select * from AVOCADO")
-
-    # Get all of the data the query returned
-    rawData = cursor.fetchall()
-
-    # Put the data into a dataframe
-    dataFrame = pd.DataFrame(rawData)
+    # Execute command and return dataframe
+    dataFrame = pd.read_sql(query, connection)
     
-    # Rename the column name. As you lose the headings when you take the data from the database. There is a slight difference in the data. The CSV has a field "Unnamed: 0" that is not present in the sql database.
-    dataFrame = dataFrame.rename(columns={0:"Date", 1: "AveragePrice", 2: "Total Volume", 3: "4046", 4: "4225", 5: "4770", 6: "Total Bags", 7: "Small Bags", 8: "Large Bags", 9: "XLarge Bags", 10: "type", 11: "year", 12: "region" })
+    # Close the db connection
+    connection.close()
     
     # Print the dataFrame
     #print(dataFrame)
@@ -91,15 +86,23 @@ def importSQL():
 # STEP 7: Function to clean region field
 def cleanseRegionField(region):
     
+    error0 = region.isnull().sum()
     region.dropna()
     # There are 57 Different regions.
     #print("Number of different regions: " + str(len(region.unique())))
    
     # The issue with the region variable is that there is not specific enough. Some of the entires are the names of the towns. But others contain the name of the town and the state in the same field and in no particular order. To imporve this data there should be seperate fields for the city, state country, etc.
     
+    error1 = len(region[region == "Baltimore-Washington"])
+    print(error1)
     # There are two different versions of the BaltimoreWashingtion value so we need to make these the same 
     region[region.str.contains("Baltimore-Washington", regex=True)] = "BaltimoreWashington"
     
+    error2 = len(region[region.str.contains(" ")])
+    print(str(error0 + error1 + error2))
+    # There are three different denver fields. Two that have extra spaces so we can remove them with:
+    region = region.str.replace(" ", "")
+
     #print(region.unique())
 
 # STEP 8: Function to clean year field
@@ -139,20 +142,14 @@ def cleanseSQLTypeField(types):
 def consolidateData(csvFrame, sqlFrame):
     
     """
-    Visual Inspection
     MAKE A PLOT 
-    From visual inspection we can see that the csvFrame has a column that is not present in the sql frame. the 
     The "Unnamed: 0" Column is only in the csvFrame. We don't need to do anything about this now. We can decide to keep
     the field by using an inner(discard) or an outter(keep) merge or concat.
-
-        The other issue is that there will be 2 instances of the same index number.  
+    Consolidation
     """
     
 
 
-    """
-    Consolidation
-    """
     # print(csvFrame)
     # print(sqlFrame)
     
