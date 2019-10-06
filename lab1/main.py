@@ -22,6 +22,11 @@ def cleanseDateFields(dataFrame):
     # Use "infer_datatime_format=True" so that it will be able to read the valid options
     # There are three formats YYYY-MM-DD DD-MM-YYYY and DD/MM the first two are valid but the dates in DD/MM format
     # are converted to NaT.
+    # Using visual inspection I found that:
+    # YYYY-MM-DD = 8787
+    # DD-MM-YYY = 169
+    # MM-YY = 168
+
     dates = pd.to_datetime(dataFrame["Date"],errors="coerce", infer_datetime_format=True)
     dates = dates.dropna()
     dataFrame["Date"] = dates
@@ -60,7 +65,17 @@ def cleanseAveragePriceFields(averagePrice):
     # So we must replace them with all with .
     
     averagePrice = averagePrice.str.replace(",",".")
+
+    # Now we can cast all of the data to be numeric
+
+    averagePrice = pd.to_numeric(averagePrice, errors="coerce")
+    
+    # Drop other null/nan values
+    averagePrice = averagePrice.dropna()
+
     # print(averagePrice.unique())
+
+    return averagePrice
 
 # STEP 6 Function to import data from mysql
 def importSQL():
@@ -86,24 +101,29 @@ def importSQL():
 # STEP 7: Function to clean region field
 def cleanseRegionField(region):
     
-    error0 = region.isnull().sum()
     region.dropna()
     # There are 57 Different regions.
     #print("Number of different regions: " + str(len(region.unique())))
    
     # The issue with the region variable is that there is not specific enough. Some of the entires are the names of the towns. But others contain the name of the town and the state in the same field and in no particular order. To imporve this data there should be seperate fields for the city, state country, etc.
     
-    error1 = len(region[region == "Baltimore-Washington"])
-    print(error1)
+    # Count the errors
+    # error1 = len(region[region == "Baltimore-Washington"])
     # There are two different versions of the BaltimoreWashingtion value so we need to make these the same 
     region[region.str.contains("Baltimore-Washington", regex=True)] = "BaltimoreWashington"
     
-    error2 = len(region[region.str.contains(" ")])
-    print(str(error0 + error1 + error2))
+    # Count the errors
+    # error2 = len(region[region.str.contains(" ")])
+    
+    # There are a total of 149 errors in this field
+    #print(str(error0 + error1 + error2))
+    
     # There are three different denver fields. Two that have extra spaces so we can remove them with:
     region = region.str.replace(" ", "")
 
     #print(region.unique())
+
+    return region
 
 # STEP 8: Function to clean year field
 def cleanseYearField(year):
@@ -138,25 +158,71 @@ def cleanseSQLTypeField(types):
 
     return types
 
-# STEP 10 + 11: Function to consolidate data
+# STEP 10 + 11: Function to fix errors in visual inspection and to consolidate data
 def consolidateData(csvFrame, sqlFrame):
-    
+
     """
-    MAKE A PLOT 
     The "Unnamed: 0" Column is only in the csvFrame. We don't need to do anything about this now. We can decide to keep
     the field by using an inner(discard) or an outter(keep) merge or concat.
-    Consolidation
-    """
     
+    In step 2 we convert the dates in the csv data to panadas dates. This adds hh:mm:ss to the data. To keep the data 
+    consistant, we should do the same here.
+    """
 
+    sqlFrame["Date"] = pd.to_datetime(sqlFrame["Date"],errors="coerce", infer_datetime_format=True)
+    sqlFrame["Date"].dropna()
+   
+    """    
+    The column names are different between the two data sets we will also need to change the values so they are the 
+    same. I have chosen to change the csv varialbes to align with the sql variables
+    """
+    # Set the renamed columns df to be a new one as the function does not work when they are the same i.e csvFrame = csvFrame.rename.....
+    test = csvFrame.rename(columns={"4046":"c4046", "4225": "c4225", "4770": "c4770", "Total Bags":"TotalBags", "Small Bags" : "SmallBags", "Large Bags":"LargeBags", "XLarge Bags":"XLargeBags"}, errors="raise")
+    
+    # Set the new df back to be the old one
+    csvFrame = test
+    
+    """
+    There are two fields Total Volume and TotalValue. They could be the same value but we should look at the numbers and see if they a similar.
+    """
 
-    # print(csvFrame)
-    # print(sqlFrame)
+    #print(csvFrame["Total Volume"].describe())
+    #print(sqlFrame["TotalValue"].describe())
+    
+    """
+    CSVFRAME
+    count    9.125000e+03
+    mean     4.800141e+04
+    std      1.429706e+05
+    min      8.456000e+01
+    25%      4.780870e+03
+    50%      1.083858e+04
+    75%      3.009600e+04
+    max      1.814930e+06
+    Name: Total Volume, dtype: float64
+    
+    SQLFRAME
+    count    9.124000e+03
+    mean     1.653375e+06
+    std      4.748399e+06
+    min      3.369970e+04
+    25%      1.988675e+05
+    50%      4.082880e+05
+    75%      1.031132e+06
+    max      6.250560e+07
+    Name: TotalValue, dtype: float64
+
+    These number are too different to say that they are the same value so I will not rename the column to keep them seperate
+    """
+            
+    #print(csvFrame.columns)
+    #print(sqlFrame.columns)
     
     # To consolidate the data I will use an outter concat along the index axis. This will add the 
     finalFrame = pd.concat([csvFrame, sqlFrame], sort=False)
     
-    print(finalFrame.describe())
+    print(finalFrame)
+
 
 def main():
     
@@ -185,7 +251,6 @@ def main():
     mainSQLDataFrame["type"] = cleanseSQLTypeField(mainSQLDataFrame["type"])
     
     # Call function to consolidate data
-    finalDataFrame = consolidateData(mainCSVDataFrame, mainSQLDataFrame)
-
+    consolidateData(mainCSVDataFrame, mainSQLDataFrame)
 
 main()
