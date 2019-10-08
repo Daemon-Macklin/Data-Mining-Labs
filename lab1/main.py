@@ -20,7 +20,7 @@ def cleanseDateFields(dataFrame):
     # Convert all of the date data points to datetime
     # If there are errors use coerce and change them to NaT
     # Use "infer_datatime_format=True" so that it will be able to read the valid options
-    # There are three formats YYYY-MM-DD DD-MM-YYYY and DD/MM the first two are valid but the dates in DD/MM format
+    # There are three formats YYYY-MM-DD DD-MM-YYYY and DD/MM. The first two are valid but the dates in DD/MM format
     # are converted to NaT.
     # Using visual inspection I found that:
     # YYYY-MM-DD = 8787
@@ -105,7 +105,7 @@ def cleanseRegionField(region):
     # There are 57 Different regions.
     #print("Number of different regions: " + str(len(region.unique())))
    
-    # The issue with the region variable is that there is not specific enough. Some of the entires are the names of the towns. But others contain the name of the town and the state in the same field and in no particular order. To imporve this data there should be seperate fields for the city, state country, etc.
+    # The issue with the region variable is that there is no specific format. Some of the entires are the names of the towns. But others contain the name of the town and the state in the same field and in no particular order. To imporve this data there should be seperate fields for the city, state country, etc.
     
     # Count the errors
     # error1 = len(region[region == "Baltimore-Washington"])
@@ -161,31 +161,29 @@ def cleanseSQLTypeField(types):
 # STEP 10 + 11: Function to fix errors in visual inspection and to consolidate data
 def consolidateData(csvFrame, sqlFrame):
 
-    """
-    The "Unnamed: 0" Column is only in the csvFrame. We don't need to do anything about this now. We can decide to keep
-    the field by using an inner(discard) or an outter(keep) merge or concat.
     
-    In step 2 we convert the dates in the csv data to panadas dates. This adds hh:mm:ss to the data. To keep the data 
-    consistant, we should do the same here.
-    """
+    #The "Unnamed: 0" Column is only in the csvFrame. We don't need to do anything about this now. We can decide to keep
+    #the field by using an inner(discard) or an outter(keep) merge or concat.
+    #In step 2 we convert the dates in the csv data to panadas dates. This adds hh:mm:ss to the data. To keep the data 
+    #consistant, we should do the same here.
+    
 
     sqlFrame["Date"] = pd.to_datetime(sqlFrame["Date"],errors="coerce", infer_datetime_format=True)
     sqlFrame["Date"].dropna()
-   
-    """    
-    The column names are different between the two data sets we will also need to change the values so they are the 
-    same. I have chosen to change the csv varialbes to align with the sql variables
-    """
-    # Set the renamed columns df to be a new one as the function does not work when they are the same i.e csvFrame = csvFrame.rename.....
+       
+    #The column names are different between the two data sets we will also need to change the values so they are the 
+    #same. I have chosen to change the csv varialbes to align with the sql variable
+    # Set the renamed columns df to be a new one as the function does not work when they are the same
+    # i.e csvFrame = csvFrame.rename.....
+    
     test = csvFrame.rename(columns={"4046":"c4046", "4225": "c4225", "4770": "c4770", "Total Bags":"TotalBags", "Small Bags" : "SmallBags", "Large Bags":"LargeBags", "XLarge Bags":"XLargeBags"}, errors="raise")
     
     # Set the new df back to be the old one
     csvFrame = test
     
-    """
-    There are two fields Total Volume and TotalValue. They could be the same value but we should look at the numbers and see if they a similar.
-    """
-
+    
+    # There are two fields Total Volume and TotalValue. 
+    # They could be the same value but we should look at the numbers and see if they a similar.
     #print(csvFrame["Total Volume"].describe())
     #print(sqlFrame["TotalValue"].describe())
     
@@ -211,17 +209,21 @@ def consolidateData(csvFrame, sqlFrame):
     75%      1.031132e+06
     max      6.250560e+07
     Name: TotalValue, dtype: float64
-
-    These number are too different to say that they are the same value so I will not rename the column to keep them seperate
     """
+    # These number are too different to say that they are the same value so I will not rename the column 
+    # to keep them seperate
+    
             
     #print(csvFrame.columns)
     #print(sqlFrame.columns)
     
-    # To consolidate the data I will use an outter concat along the index axis. This will add the 
+    # To consolidate the data I will use an outter concat along the index axis. This will add all of the columns to 
+    # the new data frame. As the data such as Total Volume and Total Value can still be useful even though they
+    # are not present in half of the database
     finalFrame = pd.concat([csvFrame, sqlFrame], sort=False)
-    
-    print(finalFrame)
+   
+    # Write the data frame to a csv file.
+    finalFrame.to_csv("./finalFrame.csv")
 
 
 def main():
