@@ -43,27 +43,13 @@ def normalityAssessment(data):
     # Displacement, Acceleration, horse power, weight, mpg(Already done)
 
     seriesNames = ["displacement", "horsepower", "weight", "acceleration"]
-
-    for series in seriesNames:
-        # Distribution curve:
-        sns.distplot(data[series], kde=True, rug=True)
-        plt.title(series)
-        plt.show()
-
-        # Perform Shapiro test
-        shapTest = stats.shapiro(data[series])
-        print(str(series) + ": " + str(shapTest))
-
-        # Do Q-Q plot to confirm results
-        stats.probplot(data[series], dist="norm", plot=plt)
-        plt.title(series)
-        plt.show()
     
+    normalityCheckHelper(data, seriesNames)
     #Results:
 
     # Displacement has a right skewed distribution and with a p-value of 0.00011616637493716553 we can say that the
     # data is not normal. The Q-Q graph also confirms this.
-
+    
     # Horse Power has a bimodal distribution and with a p-value of 0.00016959250206127763 we can say that this data 
     # is not normal. The Q-Q graph also confirms this.
 
@@ -74,6 +60,26 @@ def normalityAssessment(data):
     # 0.5289148092269897 which means that the data is normal. the Q-Q graph will also back this up as there are
     # many more points on the line than the other three.
 
+    # So to try and transform the Displacement, Horse Power and Weight fields, we can transform them and see if
+    # they can help us
+
+    # We can make the weight field normal if we use the log transformation.
+    data["weight"] = data["weight"].apply(np.log)
+    
+    normalityCheckHelper(data, ["weight"])
+    # Now we get a p-value of 0.20337925851345062 which is normal, and graphs which backup it's normality
+    
+    # data["displacement"] = (data["displacement"] - data["displacement"].min()) / (data["displacement"].max() - data["displacement"].min())
+    data["displacement"] = np.sqrt(data["displacement"])
+    print(data["displacement"].describe())
+    #data["displacement"] = .5 * np.log(data["displacement"])
+    #print(data["displacement"].describe())
+    normalityCheckHelper(data, ["displacement"])
+
+    model = sm.OLS(data["mpg"], data["displacement"])
+    results = model.fit()
+    print(results.summary())
+        
 
 def regressionAssumptions(data):
     
@@ -126,35 +132,7 @@ def regressionAssumptions(data):
 
 def initialRegression(data):
     
-    # Since none of the numeric fields in their current state pass the assumptions of regression, we need to
-    # transform one of the fields to suit our regression model. I think weight is a suitable candidate as it is 
-    # close to being normal. So we will transform the data so that it is normal.
-    # To try and normalize the data I shall use the 3-sigma rule to elminate some of the outliars.
-
-    mean = data["horsepower"].mean()
-    variance = np.var(data["horsepower"])
-    sigma = np.sqrt(variance)
-    lowRange = mean - (3*sigma)
-    highRange = mean + (3*sigma)
-    
-    print(str(mean))
-    print(str(variance))
-    print(str(sigma))
-    i = 0   
-
-    displacement = data["horsepower"]
-    print(displacement.unique())
-
-    for items in displacement:
-        if not lowRange < items < highRange:
-            displacement.drop(index = i)
-            print("Dropping")
-    i += 1
-    print(displacement.unique())
-
-    print(stats.shapiro(displacement))
-
-    model = sm.OLS(data["mpg"], displacement)
+    model = sm.OLS(data["mpg"], data)
     results = model.fit()
     print(results.summary())
 
@@ -165,10 +143,29 @@ def main():
     
     # normalityMPGAssessment(data)
 
-    # normalityAssessment(data)
+    normalityAssessment(data)
 
     # regressionAssumptions(data)
 
-    initialRegression(data)
+    # initialRegression(data)
+
+# Fucntion that will perfrom three step check for normality given the data frame and a list of series to check
+def normalityCheckHelper(data, seriesNames):
+    
+    for series in seriesNames:
+        # Distribution curve:
+        sns.distplot(data[series], kde=True, rug=True)
+        plt.title(series)
+        plt.show()
+
+        # Perform Shapiro test
+        shapTest = stats.shapiro(data[series])
+        print(str(series) + ": " + str(shapTest))
+
+        # Do Q-Q plot to confirm results
+        stats.probplot(data[series], dist="norm", plot=plt)
+        plt.title(series)
+        plt.show()
+    
 
 main()
