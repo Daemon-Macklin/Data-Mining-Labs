@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from scipy import stats
 import statsmodels.api as sm
 
+# Step 1
 def importData():
     # Importing CSV file using pandas read_csv function this will give me the converted csv file as a dataframe.
     data = pd.read_csv("BSCY4_Lab_2.csv")
@@ -15,7 +16,7 @@ def importData():
     # Return data to main function
     return data    
 
-
+# Step 2
 def normalityMPGAssessment(data):
     
     # Use visual inspection as first step of Normaility Testing
@@ -44,7 +45,7 @@ def normalityAssessment(data):
 
     seriesNames = ["displacement", "horsepower", "weight", "acceleration"]
     
-    # normalityCheckHelper(data, seriesNames)
+    normalityCheckHelper(data, seriesNames)
     #Results:
 
     # Displacement has a right skewed distribution and with a p-value of 0.00011616637493716553 we can say that the
@@ -75,10 +76,11 @@ def normalityAssessment(data):
     data["dis-hp-ratio"] = data["dis-hp-ratio"].apply(np.exp)
     normalityCheckHelper(data, ["dis-hp-ratio"])
     # Now we get a p-value of 0.07251033931970596 we can say this data is normal. The histogram and Q-Q plot
-    # Also back this up.
+    # Also back this up. We will forget about this as we only need two numeric values.
     
     return data
 
+# Step 4 and Step 5
 def regressionAssumptions(data):
     
     # The Regression Assumptions:
@@ -86,7 +88,8 @@ def regressionAssumptions(data):
     # 2. Normality of Predictors and outcome
     # 3. Homoscedasticity of Residuals
     # 4. Lin. Dependency Between Predictors and Outcome.
-
+    
+    #--------------------Step 4--------------------#
     # Acceleration and Weight are the the only Normal Predictor. And so all of the other fields do not fit the other 
     # assumptions.
     
@@ -95,6 +98,7 @@ def regressionAssumptions(data):
     # Weight and Acceleration have a correlation of -0.5593202022603644
     # This is below .95 so there is predictor independance. And we can use the two for our regression model.
     
+    #--------------------Step 5--------------------#
     # Now we will build our regression model and ensure it satisifies all of the regression assumptions
     # Build a model with acceleration
     model = sm.OLS(data["mpg"], data["acceleration"])
@@ -172,6 +176,7 @@ def regressionAssumptions(data):
     # change as the input changes. And there is no "clump" of data points around 0.
     # Weight does not pass the assumptions of regression
 
+# Step 6
 def weightAccelerationRegression(data):
     
     # Since weight an acceleration are not correlated, we can use them both for a regression model.
@@ -221,9 +226,9 @@ def weightAccelerationRegression(data):
     plt.show()
     
     # After ploting the graph we can see that there is Homscedasticity in the scatter plot. It is not as 
-    # Strong as acceleration. 
+    # accurate as acceleration. 
 
-
+# Step 7
 def mediationAnalysis(data):
     
     # We compare this to the regression results of mpg based on acceleration, mpg based on weight and mpg based
@@ -265,7 +270,7 @@ def mediationAnalysis(data):
     # from 0.967 to 0.330, and an increase of the p-value of accleration from 0.000 to 0.278. This shows there is
     # an mediation effect and we should drop weight. 
     
-
+# Step 8
 def catRegression(data):    
 
     dummies = pd.get_dummies(pd.Series(data["model year"]))
@@ -329,6 +334,7 @@ def catRegression(data):
     # I think that Model year is the best option as origin is all the same, and Cylinders only has 3 unique
     # catagories. You could use Cylinders but it would not be an accurate regression model
 
+# Step 9
 def mediationCategorical(data):
 
     # To check is there is a mediation effect we shuold compare the regression results between acceleration, model year
@@ -389,7 +395,7 @@ def mediationCategorical(data):
 def main():
     data = importData()
     
-    # normalityMPGAssessment(data)
+    normalityMPGAssessment(data)
 
     data = normalityAssessment(data)
 
