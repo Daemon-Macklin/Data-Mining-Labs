@@ -1,12 +1,11 @@
-from sklearn import datasets, svm
-import matplotlib as plt
-from sklearn.model_selection import train_test_split
 import pandas
-import numpy as np 
+import numpy as np
+from sklearn import datasets, svm
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 
 # Step 1 - Import the data from the dataset 
 def importIris():
@@ -112,6 +111,7 @@ def buildFirstClssifier(irisSubsets):
     #print(clf.intercept_)
     #print("")
     print("Test")
+    
     # Test classification with test subset
     prediction_test = clf.predict(irisSubsets[2])
     print(classification_report(irisSubsets[3], prediction_test))
@@ -119,6 +119,7 @@ def buildFirstClssifier(irisSubsets):
     print(accuracy_score(irisSubsets[3], prediction_test))
     print("")
     print("Validataion")
+    
     # Test again with the validation subset
     prediction_valid = clf.predict(irisSubsets[4])
     print(classification_report(irisSubsets[5], prediction_valid))
@@ -138,6 +139,7 @@ def buildSecondClassifier(irisSubsets):
     print("\n----------Decision Tree----------\n")
     # Print results
     print("Test")
+    
     # Test classification with test subset
     prediction_test = clf.predict(irisSubsets[2])
     print(classification_report(irisSubsets[3], prediction_test))
@@ -145,6 +147,7 @@ def buildSecondClassifier(irisSubsets):
     print(accuracy_score(irisSubsets[3], prediction_test))
     print("")
     print("Validataion")
+    
     # Test again with the validation subset
     prediction_valid = clf.predict(irisSubsets[4])
     print(classification_report(irisSubsets[5], prediction_valid))
@@ -159,12 +162,12 @@ def buildThirdClassifier(irisSubsets):
     # Create the logisitic regressoin classifier
     clf = LogisticRegression(random_state=0, solver='lbfgs',multi_class='multinomial')
     
-    tep 7. Select the best out of the three classifiers. (2 points)
     clf.fit(irisSubsets[0], irisSubsets[1])
 
     print("\n----------Logistic Regression----------\n")
     # Print results
     print("Test")
+    
     # Test classification with test subset
     prediction_test = clf.predict(irisSubsets[2])
     print(classification_report(irisSubsets[3], prediction_test))
@@ -172,6 +175,7 @@ def buildThirdClassifier(irisSubsets):
     print(accuracy_score(irisSubsets[3], prediction_test))
     print("")
     print("Validataion")
+    
     # Test again with the validation subset
     prediction_valid = clf.predict(irisSubsets[4])
     print(classification_report(irisSubsets[5], prediction_valid))
@@ -182,7 +186,12 @@ def buildThirdClassifier(irisSubsets):
 
 # Step 7 - Selecting the best classifier
 # Based on the Accuracy socres and classification reports I believe that logistic regression is the best
-# classifier. It achieved the highest accuracy score most of the time compared to the other two classifiers.
+# classifier. It achieved the highest accuracy score most of the time compared to the other two classifiers through
+# a number of tests. However with the amount of data used it is not entirly clear which is the best as sometimes the S
+# VM preforms best or the decision tree performs best.
+
+# Step 8 - Future Performance on Logistic regression classifier
+# I can't see the future
 
 def main():
 
