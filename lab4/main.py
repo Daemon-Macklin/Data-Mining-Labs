@@ -1,10 +1,10 @@
 from sklearn.cluster import AgglomerativeClustering
-from scipy.cluster.hierarchy import dendrogram
-from sklearn import datasets
 from sklearn.cluster import KMeans
-import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import datasets
 from sklearn import metrics
+import numpy as np
+import statistics
 
 # Step 1: Method to import iris dataset
 def importIris():
@@ -51,18 +51,19 @@ def withinClusters(kmeansList, iris):
     plt.title("Within Clusters")
     plt.show()
 
-# Step 4: Method to plot plot the number of data points outside cluseters against the number of clusters
+# Step 4: Method to plot the number of data points outside cluseters against the number of clusters
 def betweenCluster(kmeansList, iris):
 
     between = []
     clusterIndex = []
     # For each of the KMean results in the kmeans list
     for kmeans in kmeansList:
+        # Get the count of elements in each cluster
+        values, counts = np.unique(kmeans.labels_, return_counts=True)
 
-
-        # Add the size of the data set - the inertia_ to the inertia_ list
-        # As this is the number of data in clusters
-        between.append(len(iris.data) - kmeans.inertia_)
+        # Get the dot product between number of elements and dissimilarity
+        dists = np.dot(counts, metrics.euclidean_distances(kmeans.cluster_centers_))
+        between.append(dists.mean())
         clusterIndex.append(kmeans.n_clusters)
 
     # Create a scatter plot of the number of clusters against
@@ -103,6 +104,10 @@ in the iris data set.
 # Step 7: Method to perform Hierarchical Clustering
 def hierarchicalCluster(iris, clusters):
 
+    # Do the hierarchicalCluster cluster with the number of cluseters
+    # specified by clusters
+    # With random_state as 8687 so the data is always made
+    # same way
     clustering = AgglomerativeClustering(distance_threshold=None, n_clusters=clusters)
     clustering = clustering.fit(iris.data)
     return clustering
@@ -121,6 +126,7 @@ def main():
     iris = importIris()
 
     kmeansList = []
+    # Loop though and make a list of KMeans results with 2-10 clusters
     for i in range(2, 11):
         kmeansList.append(KMeansCluster(iris, i))
 
