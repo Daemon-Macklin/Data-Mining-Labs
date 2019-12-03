@@ -54,16 +54,21 @@ def withinClusters(kmeansList, iris):
 # Step 4: Method to plot the number of data points outside cluseters against the number of clusters
 def betweenCluster(kmeansList, iris):
 
+    # Get the center of the dataset
+    center = KMeans(n_clusters=1, random_state=8697).fit(iris.data)
+
     between = []
     clusterIndex = []
     # For each of the KMean results in the kmeans list
     for kmeans in kmeansList:
         # Get the count of elements in each cluster
         values, counts = np.unique(kmeans.labels_, return_counts=True)
-
-        # Get the dot product between number of elements and dissimilarity
-        dists = np.dot(counts, metrics.euclidean_distances(kmeans.cluster_centers_))
-        between.append(dists.mean())
+        dist = 0
+        for cluster, count in zip(kmeans.cluster_centers_, counts):
+            # Get the dot product between number of elements and dissimilarity (Distance from center of cluster
+            # to center of data all to be squared)
+            dist += np.dot(count, np.square(metrics.euclidean_distances([cluster], center.cluster_centers_)))
+        between.append(dist)
         clusterIndex.append(kmeans.n_clusters)
 
     # Create a scatter plot of the number of clusters against
